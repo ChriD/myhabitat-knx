@@ -32,7 +32,7 @@
       lightTypeElement.onchange = function () {
         // when selection of the type of light is changed, we have to store it back into our default value
         // because this is not done automatically!
-        // ATTENTION: In seems that the 'node changed' is not triggered (no 'changed' mark on the node in the gui)
+        // ATTENTION: In seems that the 'node changed' is not triggered (no 'changed' mark on the node in the gui) not sure why
         // TODO: @@@
         if(lightTypeElement.selectedIndex >= 0)
           self.lightType = lightTypeElement.options[lightTypeElement.selectedIndex].value
