@@ -17,7 +17,8 @@
   "node-red": {
     "nodes": {
       "myhabitat-adapter-knx": "src/nodes/adapters/myhabitat.node.adapter.knx.js",
-      "myhabitat-thing-knx-light": "src/nodes/things/knx/myhabitat.node.thing.knx.light.js"
+      "myhabitat-thing-knx-light": "src/nodes/things/knx/myhabitat.node.thing.knx.light.js",
+      "myhabitat-thing-knx-plug": "src/nodes/things/knx/myhabitat.node.thing.knx.plug.js"
     }
   },
   "dependencies": {
