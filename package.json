@@ -18,7 +18,9 @@
     "nodes": {
       "myhabitat-adapter-knx": "src/nodes/adapters/myhabitat.node.adapter.knx.js",
       "myhabitat-thing-knx-light": "src/nodes/things/knx/myhabitat.node.thing.knx.light.js",
-      "myhabitat-thing-knx-plug": "src/nodes/things/knx/myhabitat.node.thing.knx.plug.js"
+      "myhabitat-thing-knx-plug": "src/nodes/things/knx/myhabitat.node.thing.knx.plug.js",
+      "myhabitat-thing-knx-presencedetector": "src/nodes/things/knx/myhabitat.node.thing.knx.presenceDetector.js",
+      "myhabitat-thing-knx-gaFilter": "src/nodes/things/knx/myhabitat.node.thing.knx.gaFilter.js"
     }
   },
   "dependencies": {
