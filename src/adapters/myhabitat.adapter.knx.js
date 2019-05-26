@@ -74,13 +74,13 @@ class MyHabitatAdapter_KNX extends MyHabitatAdapter
     switch(_data.action)
     {
       case "WRITE":
-        this.knxWrite(_data.ga, _data.dpt, _data.value, _data.options)
+        this.knxWrite(_data.ga, _data.dpt, _data.value)
         break
       case "OBSERVE":
-        this.observeGA(_data.ga, _data.dpt, _data.options)
+        this.observeGA(_data.ga, _data.dpt)
         break
       case "OBSERVEALL":
-        this.observeAll(true, _data.options)
+        this.observeAll(true)
         break
       default:
         this.logError('Action \'' + _data.action + '\' not found!')
@@ -181,7 +181,7 @@ class MyHabitatAdapter_KNX extends MyHabitatAdapter
     // if there is no DPT we send back the raw value
     try
     {
-      const dptId = self.observedGA[_destination].options ? self.observedGA[_destination].options.dpt : ""
+      const dptId = self.observedGA[_destination].dpt ? self.observedGA[_destination].dpt : ""
       self.logTrace("Convert incoming value to DPT: " + (dptId ? dptId : "No DPT value defined!"))
       value =  dptId ? DPTLib.fromBuffer(_value, DPTLib.resolve(dptId)) : value
     }
@@ -198,7 +198,7 @@ class MyHabitatAdapter_KNX extends MyHabitatAdapter
   }
 
 
-  knxWrite(_ga, _dpt, _value, _options)
+  knxWrite(_ga, _dpt, _value)
   {
     var datapoint = new KNX.Datapoint({ga: _ga, dpt: _dpt}, this.knx)
     datapoint.write(_value)
@@ -208,15 +208,22 @@ class MyHabitatAdapter_KNX extends MyHabitatAdapter
   }
 
 
-  observeGA(_ga, _dpt, _options)
+  observeGA(_ga, _dpt)
   {
-    this.observedGA[_ga] = { ga : _ga, options : _options }
+    // only add GA to observation if not already observed
+    // (we have to deny unecessary creations of KNX datapoints)
+    if(this.observedGA[_ga])
+      return
+    // the observed GA will be stored in an internal array and will be added as KNX datapoint
+    // The KNX Datapoint will do an auto read of the value id the connection to the bus has been established
+    this.observedGA[_ga] = {  ga  : _ga,
+                              dpt : _dpt}
     this.addFeedbackDatapoint(_ga, _dpt)
     this.logDebug('Addded observation for group address \'' + _ga + '\' (' + _dpt + ')')
   }
 
 
-  observeAll(_observeAll,  _options)
+  observeAll(_observeAll)
   {
     this.globalObservation = _observeAll
     this.logDebug(this.globalObservation ? 'Addded global observation' : 'Removed global observation')
@@ -230,7 +237,7 @@ class MyHabitatAdapter_KNX extends MyHabitatAdapter
     // That means it will be read when the connection is beeing established
     const datapoint = new KNX.Datapoint({ga: _ga, dpt: _dataType, autoread: true}, self.knx)
     datapoint.on("change", function(_currentValue, _value, _ga){
-      // there is no need to do anything here weith the infi that the datapoint has been changed
+      // there is no need to do anything here with the info that the datapoint has been changed
       // this will be catched by the 'knxEvent' method anyway!
     })
     self.feedbackDatapoints.push(datapoint)

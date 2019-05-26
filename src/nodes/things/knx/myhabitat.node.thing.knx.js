@@ -7,7 +7,7 @@ class MyHabitatNode_Thing_KNX extends MyHabitatNode_Thing
   constructor(_RED, _config)
   {
     super(_RED, _config)
-    this.observedGA = []
+    this.observedGA = {}
   }
 
 
@@ -24,7 +24,7 @@ class MyHabitatNode_Thing_KNX extends MyHabitatNode_Thing
     // be sure we get all messages the knx adapter was subscribed to listen to
     // those messages may not all belong to the specific node instance, so we have to filter out the appropriate KNX messages
     this.adapterNode().on('knxMessage', function(_data){
-      if(self.observedGA.includes(_data.destination))
+      if(self.observedGA[_data.destination])
         self.gaReceived(_data.destination, _data.value, _data)
     })
   }
@@ -36,7 +36,10 @@ class MyHabitatNode_Thing_KNX extends MyHabitatNode_Thing
     // which node has observed what GA (and therfore senda all GA's to all KNX nodes) we have to store the observed GA
     // for the node locally
     this.adapterNode().observeGA(_ga, _dpt)
-    this.observedGA.push(_ga)
+    this.observedGA[_ga] =  {
+                              ga  : _ga,
+                              dpt : _dpt
+                            }
   }
 
 
