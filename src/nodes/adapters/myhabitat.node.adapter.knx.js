@@ -35,6 +35,25 @@ module.exports = function(RED) {
       return { host : this.config.host , port : this.config.port, forceTunneling : this.config.forceTunneling }
     }
 
+
+    ready()
+    {
+      const self = this
+      super.ready()
+
+      // be sure to send the initial value of the alive state of the knx process if status is already set by the process
+      // otherwise the following event registration will trigger on change
+      if(self.state().process)
+        self.emit('processAliveStateChanged', self.state().process.alive)
+
+      // it may be of advantage to know if the underlaying process has changed its alive state
+      // for e.g we have to re-add the observation GA's if the underlaying process crashed and was restarted by the watchdog
+      self.appNode().on('entityStateChanged', function(_path, _value, _previousValue){
+        if(_path === self.getEntityId() + '.state.process.alive')
+          self.emit('processAliveStateChanged', _value)
+      })
+    }
+
     adapterMessage(_adapterEntity, _data)
     {
       // we have retrieved KNX data, so we do emit a event where all KNX nodes are listening on

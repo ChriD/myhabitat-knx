@@ -72,9 +72,6 @@ module.exports = function(RED) {
         this.observeGA(this.config.gaFeedbackBlindPosition, 'DPT5.001')
       if(this.config.gaFeedbackBlindDegree)
         this.observeGA(this.config.gaFeedbackBlindDegree, 'DPT5.001')
-
-      // observe the KNX connected state (enable feedbacks)
-      // TODO: @@@
     }
 
 
