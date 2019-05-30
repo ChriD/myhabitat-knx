@@ -45,8 +45,6 @@ class MyHabitatNode_Thing_KNX extends MyHabitatNode_Thing
         self.observeGA(keys[idx], self.observedGA[keys[idx]].dpt)
       }
     })
-
-    //TODO: Maybe call 'registerObservation??' method where all feedback datapoints have to be registered?
   }
 
 

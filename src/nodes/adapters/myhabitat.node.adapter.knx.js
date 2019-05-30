@@ -45,12 +45,16 @@ module.exports = function(RED) {
       // otherwise the following event registration will trigger on change
       if(self.state().process)
         self.emit('processAliveStateChanged', self.state().process.alive)
+      if(self.state().connection)
+        self.emit('processAliveStateChanged', self.state().connection.connected)
 
-      // it may be of advantage to know if the underlaying process has changed its alive state
+      // it may be of advantage to know if the underlaying process has changed its alive state or it connection state
       // for e.g we have to re-add the observation GA's if the underlaying process crashed and was restarted by the watchdog
       self.appNode().on('entityStateChanged', function(_path, _value, _previousValue){
         if(_path === self.getEntityId() + '.state.process.alive')
           self.emit('processAliveStateChanged', _value)
+        if(_path === self.getEntityId() + '.state.connection.connected')
+          self.emit('connectionStateChanged', _value)
       })
     }
 
