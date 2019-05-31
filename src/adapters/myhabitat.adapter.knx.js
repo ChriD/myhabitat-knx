@@ -76,6 +76,9 @@ class MyHabitatAdapter_KNX extends MyHabitatAdapter
       case "WRITE":
         this.knxWrite(_data.ga, _data.dpt, _data.value)
         break
+      case "READ":
+        this.knxRead(_data.ga, _data.dpt, _data.value)
+        break
       case "OBSERVE":
         this.observeGA(_data.ga, _data.dpt)
         break
@@ -200,11 +203,20 @@ class MyHabitatAdapter_KNX extends MyHabitatAdapter
 
   knxWrite(_ga, _dpt, _value)
   {
-    var datapoint = new KNX.Datapoint({ga: _ga, dpt: _dpt}, this.knx)
+    const datapoint = new KNX.Datapoint({ga: _ga, dpt: _dpt}, this.knx)
     datapoint.write(_value)
 
     this.adapterState.counters.sent++
     this.adapterState.times.lastSent = new Date()
+  }
+
+
+  knxRead(_ga, _dpt)
+  {
+    if(this.feedbackDatapoints[_ga])
+      this.feedbackDatapoints[_ga].read()
+    else
+      this.addFeedbackDatapoint(_ga, _dpt)
   }
 
 
@@ -240,7 +252,7 @@ class MyHabitatAdapter_KNX extends MyHabitatAdapter
       // there is no need to do anything here with the info that the datapoint has been changed
       // this will be catched by the 'knxEvent' method anyway!
     })
-    self.feedbackDatapoints.push(datapoint)
+    self.feedbackDatapoints[_ga] = datapoint
   }
 
 }

@@ -60,6 +60,10 @@ class MyHabitatNode_Thing_KNX extends MyHabitatNode_Thing
                             }
   }
 
+  readGA(_ga, _dpt)
+  {
+    this.adapterNode().readGA(_ga, _dpt)
+  }
 
   sendGA(_ga, _dpt, _value)
   {

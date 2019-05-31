@@ -66,10 +66,6 @@ module.exports = function(RED) {
       this.emit('knxMessage', _data)
     }
 
-    // TODO: if the KNX adapter process was rebooted (no matter why), we have to recreate all the observed GA's and datapoints
-    // for each node. So we have t get all the 'KNX' nodes and retrigger the GS observations for them
-    // * store feddback GA infos on each node --> DONE
-    // * info of adapter process reboot by mesage from adapter? (INIT/READY Mesage???)
 
     observeGA(_ga, _dpt = 'DPT1.001')
     {
@@ -87,6 +83,16 @@ module.exports = function(RED) {
       this.adapterProcess().send( {data : { action    : "write",
                                             ga        : _ga,
                                             value     : _value,
+                                            dpt       : _dpt,
+                                            options   : {},
+                                          }
+                                  })
+    }
+
+    readGA(_ga, _dpt)
+    {
+      this.adapterProcess().send( {data : { action    : "read",
+                                            ga        : _ga,
                                             dpt       : _dpt,
                                             options   : {},
                                           }

@@ -12,6 +12,9 @@ module.exports = function(RED) {
       super(RED, _config)
       RED.nodes.createNode(this, _config)
       this.created()
+
+      this.positioningIntervalId  = 0
+      this.positioningInterval    = 1000
     }
 
 
@@ -26,52 +29,56 @@ module.exports = function(RED) {
 
     input(_message)
     {
+      const self    = this
       const payload = _message.payload
 
-      /*
       // be sure we always have a state object for further processing
       if(!_message.state)
-        _message.state = {}
+      {
+        if(_message.payload.state && typeof _message.payload.state == "object")
+          _message.state = JSON.parse(JSON.stringify(_message.payload.state))
+        else
+          _message.state = {}
+      }
+
+      // fill up the given message state object with all values we need
+      _message.state.position = _message.state.hasOwnProperty('position') ? _message.state.position : self.state().position
+      _message.state.degree   = _message.state.hasOwnProperty('degree')   ? _message.state.degree   : self.state().degree
 
       switch(typeof payload)
       {
-        // a number is representating a brightness value
+        // a number is representating the position of the blind
         case "number" :
-          _message.state.isOn = payload > 0 ? true : false
-          break
-        // a boolean tells us if the lamp should be on or off
-        case "boolean":
-          _message.state.isOn = payload === true ? true : false
-          break
-        // and we may have some special actions which are representated as strings
-        case "string":
-          if(payload.toUpperCase() === "TOGGLE")
-            _message.state.isOn = this.state().isOn ? false : true
+          _message.state.position = payload
           break
       }
 
-      // apply the state object which was given by the input or which was created from
-      // the above code to the physical device
-      if(_message.state)
-      {
-        if(_message.state.isOn)
-          this.turnOn()
-        if(!_message.state.isOn)
-          this.turnOff()
-      }
-      */
-
+      self.setPositionAndDegree(_message.state.position, _message.state.degree).catch(function(_exception){
+        self.error(_exception.toString())
+      })
     }
 
 
     ready()
     {
+      const self = this
+
       super.ready()
 
-      if(this.config.gaFeedbackBlindPosition)
-        this.observeGA(this.config.gaFeedbackBlindPosition, 'DPT5.001')
-      if(this.config.gaFeedbackBlindDegree)
-        this.observeGA(this.config.gaFeedbackBlindDegree, 'DPT5.001')
+      if(self.config.gaFeedbackBlindPosition)
+        self.observeGA(self.config.gaFeedbackBlindPosition, 'DPT5.001')
+      if(self.config.gaFeedbackBlindDegree)
+        self.observeGA(self.config.gaFeedbackBlindDegree, 'DPT5.001')
+
+      self.adapterNode().on('connectionStateChanged', function(_connected){
+        if(_connected)
+        {
+          // be sure the feedback is activated.There are some actors which we do have to set a GA to get
+          // position change responses and to get corrcet updated return values while moving the blinds
+          if(self.config.gaFeedbackEnabled)
+          self.sendGA(self.config.gaFeedbackEnabled, 'DPT1.001', 1)
+        }
+      })
     }
 
 
@@ -92,6 +99,136 @@ module.exports = function(RED) {
       this.updateNodeInfoStatus()
     }
 
+
+    setPositionAndDegree(_position, _degree)
+    {
+      const self = this
+
+      return new Promise((_resolve, _reject) => {
+        // if any intervalls are running from prior actions we do clear them
+        self.clearIntervals()
+
+        // first set the position and if the position was reached trigger the degree
+        self.setPosition(_position).then(function(){
+          self.setDegree(_degree).then(function(){
+            _resolve()
+          }).catch(function(_exception){
+            self.clearIntervals()
+            _reject(_exception)
+          })
+        }).catch(function(_exception){
+          self.clearIntervals()
+          _reject(_exception)
+        })
+      })
+    }
+
+
+    setDegree(_degree)
+    {
+      const self = this
+
+      return new Promise((_resolve, _reject) => {
+        var elapsedTime     = 0
+        var elapsedIdleTime = 0
+        var oldPosition     = -1
+
+        // be sure we do not exceed the values 0-100
+        _degree   =  Math.min(_degree, 100)
+        _degree   =  Math.max(_degree, 0)
+
+        // no need to do anything if we are in the correct degree
+        if(self.state().degree == _degree)
+        {
+          _resolve()
+          return
+        }
+
+        // send the command to move to a specific degree (0-100%)
+        self.sendGA(self.config.gaActionBlindDegree, 'DPT5.001', _degree)
+        // if the feedback ga's are enabled we wait until we have reached the position
+        self.positioningIntervalId = setInterval(function(){
+          if(self.state().degree == _degree)
+          {
+            self.clearIntervals()
+            _resolve()
+          }
+          // due to some bad behaviours of KNX blind/shutter actors we have to force a read of the feedback ga
+          // for.eg. the Griesser MX is not able to send the last degree if we use "send while moving" (only 5% steps are triggered)
+          self.readGA(self.config.gaFeedbackBlindDegree, 'DPT5.001')
+
+          // if we have not reached the degree in a period of time (timeout) we do reject
+          if(oldPosition == self.state().position)
+            elapsedIdleTime += self.positioningInterval
+          oldPosition == self.state().position
+
+          elapsedTime += self.positioningInterval
+          if(elapsedIdleTime >= 5000 || elapsedTime >= 60000)
+          {
+            self.clearIntervals()
+            _reject(new Error("setDegree timout reached!"))
+          }
+        }, self.positioningInterval)
+
+      })
+    }
+
+
+    setPosition(_position)
+    {
+      const self = this
+
+      return new Promise((_resolve, _reject) => {
+        var elapsedTime     = 0
+        var elapsedIdleTime = 0
+        var oldPosition     = -1
+
+        // be sure we do not exceed the values 0-100
+        _position =  Math.min(_position, 100)
+        _position =  Math.max(_position, 0)
+
+        // no need to do anything if we are in the correct position
+        if(self.state().position == _position)
+        {
+          _resolve()
+          return
+        }
+
+        // send the command to move to a specific position (0-100%)
+        self.sendGA(self.config.gaActionBlindPosition, 'DPT5.001', _position)
+        // if the feedback ga's are enabled we wait until we have reached the position
+        self.positioningIntervalId = setInterval(function(){
+          if(self.state().position == _position)
+          {
+            self.clearIntervals()
+            _resolve()
+          }
+          // due to some bad behaviours of KNX blind/shutter actors we have to force a read of the feedback ga
+          // for.eg. the Griesser MX is not able to send the last position if we use "send while moving" (only 5% steps are triggered)
+          self.readGA(self.config.gaFeedbackBlindPosition, 'DPT5.001')
+
+          // if position does not change anymore then we will timout in 5 seconds
+          if(oldPosition == self.state().position)
+            elapsedIdleTime += self.positioningInterval
+          oldPosition == self.state().position
+
+          elapsedTime += self.positioningInterval
+          if(elapsedIdleTime >= 5000 || elapsedTime >= 60000)
+          {
+            self.clearIntervals()
+            _reject(new Error("setPosition timout reached!"))
+          }
+        }, self.positioningInterval)
+
+      })
+    }
+
+
+    clearIntervals()
+    {
+      if(this.positioningIntervalId)
+        clearInterval(this.positioningIntervalId)
+    }
 
     updateNodeInfoStatus()
     {
