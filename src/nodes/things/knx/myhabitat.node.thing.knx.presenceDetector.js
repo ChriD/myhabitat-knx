@@ -25,6 +25,7 @@ module.exports = function(RED) {
 
     input(_message)
     {
+      super.input(_message)
       // we do not have any input here, it's a presence detector.
     }
 

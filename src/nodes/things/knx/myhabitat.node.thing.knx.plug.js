@@ -25,11 +25,9 @@ module.exports = function(RED) {
 
     input(_message)
     {
-      const payload = _message.payload
+      super.input(_message)
 
-      // be sure we always have a state object for further processing
-      if(!_message.state)
-        _message.state = {}
+      const payload = _message.payload
 
       switch(typeof payload)
       {

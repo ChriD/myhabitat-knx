@@ -29,21 +29,10 @@ module.exports = function(RED) {
 
     input(_message)
     {
+      super.input(_message)
+
       const self    = this
       const payload = _message.payload
-
-      // be sure we always have a state object for further processing
-      if(!_message.state)
-      {
-        if(_message.payload.state && typeof _message.payload.state == "object")
-          _message.state = JSON.parse(JSON.stringify(_message.payload.state))
-        else
-          _message.state = {}
-      }
-
-      // fill up the given message state object with all values we need
-      _message.state.position = _message.state.hasOwnProperty('position') ? _message.state.position : self.state().position
-      _message.state.degree   = _message.state.hasOwnProperty('degree')   ? _message.state.degree   : self.state().degree
 
       switch(typeof payload)
       {

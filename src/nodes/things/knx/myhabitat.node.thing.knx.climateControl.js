@@ -5,7 +5,7 @@ const MyHabitatNode_Thing_KNX   = require('./myhabitat.node.thing.knx.js')
 
 module.exports = function(RED) {
 
-  class MyHabitatNode_Thing_KNX_Light extends MyHabitatNode_Thing_KNX
+  class MyHabitatNode_Thing_KNX_ClimateControl extends MyHabitatNode_Thing_KNX
   {
     constructor(_config)
     {
@@ -18,11 +18,13 @@ module.exports = function(RED) {
     getDefaultState()
     {
       return  {
-                isOn        : false,
-                brightness  : 100,
+                isOn                : false,
+                mode                : 0,
+                setTemperature      : 0,
+                ambientTemperature  : 0,
+                fanSpeed            : 0
               }
     }
-
 
     input(_message)
     {
@@ -32,18 +34,11 @@ module.exports = function(RED) {
 
       switch(typeof payload)
       {
-        // a number is representating a brightness value
         case "number" :
-          _message.state.brightness = payload
+          _message.state.setTemperature = payload
           break
-        // a boolean tells us if the lamp should be on or off
         case "boolean":
           _message.state.isOn = payload === true ? true : false
-          break
-        // and we may have some special actions which are representated as strings
-        case "string":
-          if(payload.toUpperCase() === "TOGGLE")
-          _message.state.isOn = this.state().isOn ? false : true
           break
       }
 
@@ -110,16 +105,10 @@ module.exports = function(RED) {
     }
 
 
-    setBrightness(_brightness)
-    {
-      //this.sendGA(this.config.gaActionOnOff, 'DPT5.001', _brightness)
-    }
-
-
     updateNodeInfoStatus()
     {
       super.updateNodeInfoStatus()
-      let infoText = Math.round((this.state().brightness)).toString() + "%"
+      let infoText = (this.state().setTemperature).toString() + " / " + (this.state().ambientTemperature).toString()
       let infoFill = this.state().isOn ? "green" : "red"
       this.status({fill:infoFill, shape:"dot", text: infoText})
     }
@@ -127,6 +116,6 @@ module.exports = function(RED) {
   }
 
 
-  RED.nodes.registerType('myhabitat-thing-knx-light', MyHabitatNode_Thing_KNX_Light)
+  RED.nodes.registerType('myhabitat-thing-knx-climatecontrol', MyHabitatNode_Thing_KNX_ClimateControl)
 
 }
