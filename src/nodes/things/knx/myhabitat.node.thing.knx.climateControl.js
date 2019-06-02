@@ -46,12 +46,12 @@ module.exports = function(RED) {
       // the above code to the physical device
       if(_message.state)
       {
-        if(_message.state.isOn /*&& _message.state.isOn != this.state().isOn*/)
+        if(_message.state.isOn && _message.state.isOn != this.state().isOn)
           this.turnOn()
-        if(!_message.state.isOn /*&& _message.state.isOn != this.state().isOn*/)
+        if(!_message.state.isOn && _message.state.isOn != this.state().isOn)
           this.turnOff()
-        if(_message.state.brightness /*&& _message.state.brightness != this.state().brightness*/ && this.isDimmable())
-          this.setBrightness(_message.state.brightness / 100 * 255)
+        if(_message.state.setTemperature && _message.state.setTemperature != this.state().setTemperature)
+          this.setTemperature(_message.state.setTemperature)
       }
 
     }
@@ -61,16 +61,12 @@ module.exports = function(RED) {
     {
       super.ready()
 
-      // register the feedback GA's for the state of the light
       if(this.config.gaFeedbackOnOff)
         this.observeGA(this.config.gaFeedbackOnOff, 'DPT1.001')
-      if(this.config.gaFeedbackBrightness && this.isDimmable())
-        this.observeGA(this.config.gaFeedbackBrightness, 'DPT5.001')
-    }
-
-    isDimmable()
-    {
-      return this.config.lightType === "SIMPLEDIM" ? true : false
+      if(this.config.gaFeedbackSetTemperature)
+        this.observeGA(this.config.gaFeedbackSetTemperature, 'DPT14.068')
+      if(this.config.gaFeedbackAmbientTemperature)
+        this.observeGA(this.config.gaFeedbackAmbientTemperature, 'DPT14.068')
     }
 
 
@@ -84,8 +80,11 @@ module.exports = function(RED) {
         case this.config.gaFeedbackOnOff:
           this.state().isOn = _value
           break
-        case this.config.gaFeedbackBrightness:
-          this.state().brightness = (100 / 255) * _value
+        case this.config.gaFeedbackSetTemperature:
+          this.state().setTemperature = _value
+          break
+        case this.config.gaFeedbackAmbientTemperature:
+          this.state().ambientTemperature = _value
           break
       }
 
@@ -102,6 +101,11 @@ module.exports = function(RED) {
     turnOff()
     {
       this.sendGA(this.config.gaActionOnOff, 'DPT1.001', 0)
+    }
+
+    setTemperature(_temperature)
+    {
+      this.sendGA(this.config.gaActionSetTemperature, 'DPT14.068', _temperature)
     }
 
 

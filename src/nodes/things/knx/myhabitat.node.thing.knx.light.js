@@ -51,11 +51,11 @@ module.exports = function(RED) {
       // the above code to the physical device
       if(_message.state)
       {
-        if(_message.state.isOn /*&& _message.state.isOn != this.state().isOn*/)
+        if(_message.state.isOn && _message.state.isOn != this.state().isOn)
           this.turnOn()
-        if(!_message.state.isOn /*&& _message.state.isOn != this.state().isOn*/)
+        if(!_message.state.isOn && _message.state.isOn != this.state().isOn)
           this.turnOff()
-        if(_message.state.brightness /*&& _message.state.brightness != this.state().brightness*/ && this.isDimmable())
+        if(_message.state.brightness && _message.state.brightness != this.state().brightness && this.isDimmable())
           this.setBrightness(_message.state.brightness / 100 * 255)
       }
 
