@@ -68,8 +68,8 @@ class MyHabitatAdapter_KNX extends MyHabitatAdapter
 
   input(_data)
   {
-    _data.action    = _data.action   ? _data.action.toUpperCase()    : "WRITE"
-    _data.datatype  = _data.datatype ? _data.datatype.toUpperCase()  : "DPT1.001"
+    _data.action    = _data.action   ? _data.action.toUpperCase()   : "WRITE"
+    _data.dpt       = _data.dpt      ? _data.dpt.toUpperCase()      : "DPT1.001"
 
     switch(_data.action)
     {
@@ -80,7 +80,7 @@ class MyHabitatAdapter_KNX extends MyHabitatAdapter
         this.knxRead(_data.ga, _data.dpt, _data.value)
         break
       case "OBSERVE":
-        this.observeGA(_data.ga, _data.dpt)
+        this.observeGA(_data.ga, _data.dpt, _data.initialRead)
         break
       case "OBSERVEALL":
         this.observeAll(true)
@@ -220,7 +220,7 @@ class MyHabitatAdapter_KNX extends MyHabitatAdapter
   }
 
 
-  observeGA(_ga, _dpt)
+  observeGA(_ga, _dpt, _initialRead = false)
   {
     // only add GA to observation if not already observed
     // (we have to deny unecessary creations of KNX datapoints)
@@ -228,9 +228,11 @@ class MyHabitatAdapter_KNX extends MyHabitatAdapter
       return
     // the observed GA will be stored in an internal array and will be added as KNX datapoint
     // The KNX Datapoint will do an auto read of the value id the connection to the bus has been established
-    this.observedGA[_ga] = {  ga  : _ga,
-                              dpt : _dpt}
-    this.addFeedbackDatapoint(_ga, _dpt)
+    this.observedGA[_ga] = {  ga          : _ga,
+                              dpt         : _dpt,
+                              initialRead : _initialRead
+                           }
+    this.addFeedbackDatapoint(_ga, _dpt, _initialRead)
     this.logDebug('Addded observation for group address \'' + _ga + '\' (' + _dpt + ')')
   }
 
@@ -242,12 +244,12 @@ class MyHabitatAdapter_KNX extends MyHabitatAdapter
   }
 
 
-  addFeedbackDatapoint(_ga, _dataType)
+  addFeedbackDatapoint(_ga, _dataType, _initialRead = false)
   {
     const self = this
     // lets create a datapoint with the ability of autoread.
     // That means it will be read when the connection is beeing established
-    const datapoint = new KNX.Datapoint({ga: _ga, dpt: _dataType, autoread: true}, self.knx)
+    const datapoint = new KNX.Datapoint({ga: _ga, dpt: _dataType, autoread: _initialRead}, self.knx)
     datapoint.on("change", function(_currentValue, _value, _ga){
       // there is no need to do anything here with the info that the datapoint has been changed
       // this will be catched by the 'knxEvent' method anyway!

@@ -50,7 +50,7 @@ module.exports = function(RED) {
         super.ready()
 
         if(this.config.gaToFilter)
-          this.observeGA(this.config.gaToFilter, this.config.gaToFilterDPT)
+          this.observeGA(this.config.gaToFilter, this.config.gaToFilterDPT, this.config.initialRequest)
       }
 
 

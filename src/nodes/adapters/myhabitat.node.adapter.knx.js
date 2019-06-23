@@ -67,13 +67,14 @@ module.exports = function(RED) {
     }
 
 
-    observeGA(_ga, _dpt = 'DPT1.001')
+    observeGA(_ga, _dpt = 'DPT1.001', _initialRead = true)
     {
       if(!this.adapterProcess())
         this.error('Adapter process not available!')
-      this.adapterProcess().send( {data : { action    : "observe",
-                                            ga        : _ga,
-                                            dpt       : _dpt
+      this.adapterProcess().send( {data : { action      : "observe",
+                                            ga          : _ga,
+                                            dpt         : _dpt,
+                                            initialRead : _initialRead
                                           }
                                   })
     }

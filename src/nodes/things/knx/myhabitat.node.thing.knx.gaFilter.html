@@ -7,6 +7,7 @@
             adapterNode:    { value: "", required: true, type: "myhabitat-adapter-knx"},
             gaToFilter:     { value: ""},
             gaToFilterDPT:  { value: ""},
+            initialRequest: { value: false},
             func:           { value: "\nreturn msg;"},
             outputs:        { value: 1}
         },
@@ -134,6 +135,10 @@
             </select>
             -->
         </div>
+        <div class="form-row">
+            <label style="width:39%;" for="node-input-initialRequest">Initial read request</label>
+            <input style="width:60%;" type="checkbox" id="node-input-initialRequest" placeholder="">
+          </div>
         <div class="form-row" style="margin-bottom: 0px;">
             <label for="node-input-func"><i class="fa fa-wrench"></i> <span>Function</span></label>
             <input type="hidden" id="node-input-func" autofocus="autofocus">

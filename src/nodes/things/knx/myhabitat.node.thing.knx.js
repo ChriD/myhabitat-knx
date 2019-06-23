@@ -48,15 +48,16 @@ class MyHabitatNode_Thing_KNX extends MyHabitatNode_Thing
   }
 
 
-  observeGA(_ga, _dpt = 'DPT1.001')
+  observeGA(_ga, _dpt = 'DPT1.001', _initialRead = true)
   {
     // KNX nodes have to tell the adapter which GA's they want to observe, due that the adapter does not distinguish
     // which node has observed what GA (and therfore senda all GA's to all KNX nodes) we have to store the observed GA
     // for the node locally
-    this.adapterNode().observeGA(_ga, _dpt)
+    this.adapterNode().observeGA(_ga, _dpt, _initialRead)
     this.observedGA[_ga] =  {
-                              ga  : _ga,
-                              dpt : _dpt
+                              ga          : _ga,
+                              dpt         : _dpt,
+                              initialRead : _initialRead
                             }
   }
 
