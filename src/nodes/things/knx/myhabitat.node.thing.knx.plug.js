@@ -31,15 +31,12 @@ module.exports = function(RED) {
 
       switch(typeof payload)
       {
-        // a number is representating a brightness value
         case "number" :
           _message.state.isOn = payload > 0 ? true : false
           break
-        // a boolean tells us if the lamp should be on or off
         case "boolean":
           _message.state.isOn = payload === true ? true : false
           break
-        // and we may have some special actions which are representated as strings
         case "string":
           if(payload.toUpperCase() === "TOGGLE")
             _message.state.isOn = this.state().isOn ? false : true
