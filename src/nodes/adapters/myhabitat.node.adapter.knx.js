@@ -1,7 +1,7 @@
 "use strict"
 
-const MyHabitatNode_Adapter  = require('myhabitat').MyHabitatNode_Adapter
-const AppRoot               = require('app-root-path')
+const MyHabitatNode_Adapter = require('myhabitat').MyHabitatNode_Adapter
+const Path                  = require('path')
 
 module.exports = function(RED) {
 
@@ -27,7 +27,8 @@ module.exports = function(RED) {
 
     getAdapterProcessFile()
     {
-      return AppRoot + '/src/processes/myhabitat.process.adapter.knx.js'
+      const ModulePath = require.resolve('../../../README.md')
+      return Path.dirname(ModulePath) + '/src/processes/myhabitat.process.adapter.knx.js'
     }
 
     getAdapterConfiguration()
